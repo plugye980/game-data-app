@@ -55,7 +55,7 @@ with st.sidebar:
     st.header("설정")
     k = st.slider("추천 개수", 5, 30, 10)
     max_pr = st.slider(
-        "똥겜 기준: 긍정 비율 최대(%)", 0, BAD_THRESHOLD - 1, BAD_THRESHOLD - 1,
+        "저퀄리티 게임 기준: 긍정 비율 최대(%)", 0, BAD_THRESHOLD - 1, BAD_THRESHOLD - 1,
         help="이 값 이하인 게임만 추천 후보가 됩니다.",
     )
     min_rev = st.slider("샘플 리뷰 최소 개수", 3, 30, 3)
@@ -80,7 +80,7 @@ params = Params(w_sim=w_sim, alpha=alpha, max_positive_ratio=max_pr, min_reviews
 st.title("특이한 게임 추천")
 st.caption("좋아하는 게임을 고르면, 평가는 낮지만 취향에 맞을 만한 게임을 찾아 줍니다.")
 
-tab_rec, tab_eval, tab_data = st.tabs(["똥겜 추천", "모델 성능", "데이터·변수"])
+tab_rec, tab_eval, tab_data = st.tabs(["저퀄리티 게임 추천", "모델 성능", "데이터·변수"])
 
 # ------------------------------------------------------------------ 추천
 with tab_rec:
@@ -103,7 +103,7 @@ with tab_rec:
     else:
         out = rec.recommend(picked, params, k=k)
         if out.empty:
-            st.warning("조건에 맞는 똥겜 후보가 없습니다. 사이드바 기준을 완화해 보세요.")
+            st.warning("조건에 맞는 저퀄리티 게임 후보가 없습니다. 사이드바 기준을 완화해 보세요.")
         for i, r in out.iterrows():
             with st.container(border=True):
                 c1, c2 = st.columns([1, 3])
@@ -175,7 +175,7 @@ with tab_data:
         )
     )
     st.markdown(
-        f"- 학습 대상: 긍정 비율 {BAD_THRESHOLD}% 미만 게임(똥겜)의 리뷰\n"
+        f"- 학습 대상: 긍정 비율 {BAD_THRESHOLD}% 미만인 저퀄리티 게임의 리뷰\n"
         "- 리뷰 자신의 정보가 특성에 섞이지 않도록 5-fold out-of-fold 방식으로 게임 단위 특성 계산\n"
         "- 추천 점수 = 취향 유사도 × w + 추천 확률(후보 내 정규화) × (1 − w)\n"
         "- 원본 데이터에 태그가 없는 게임은 함께 추천된 게임들의 태그를 빌려 유사도 계산\n"

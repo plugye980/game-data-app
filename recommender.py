@@ -1,14 +1,14 @@
-"""똥겜 추천 모델.
+"""저퀄리티 게임 추천 모델.
 
 1) 분류 모델 (로지스틱 회귀)
    - 종속변수: is_recommended (리뷰 단위 추천 여부)
    - 독립변수: funny_rate  = 게임 리뷰 중 funny 표를 1개 이상 받은 리뷰 비율
               med_hours   = 게임 리뷰 작성자들의 플레이 시간 중앙값
    - 리뷰 자신의 값이 특성에 섞이지 않도록 5-fold out-of-fold 방식으로 특성을 만든다.
-   - 학습 대상: 똥겜(positive_ratio < 70) 리뷰
+   - 학습 대상: 저퀄리티 게임(positive_ratio < 70) 리뷰
 
 2) 추천
-   - 후보: 똥겜 중 샘플 리뷰가 min_reviews개 이상인 게임
+   - 후보: 저퀄리티 게임 중 샘플 리뷰가 min_reviews개 이상인 게임
    - 최종 점수 = w * 취향 유사도(유저가 고른 게임과의 태그·설명·공동 추천 유사도)
               + (1 - w) * 분류 모델이 예측한 추천 확률
 """
@@ -41,7 +41,7 @@ DATA_URL = "https://raw.githubusercontent.com/plugye980/game-data1/refs/heads/ma
 LOCAL_DIR = Path(__file__).parent / "data"
 FILES = ["games.csv", "games_metadata.json", "recommendations.csv", "users.csv"]
 
-BAD_THRESHOLD = 70          # positive_ratio < 70 → 똥겜 (Steam 'Mixed' 이하)
+BAD_THRESHOLD = 70          # positive_ratio < 70 → 저퀄리티 게임 (Steam 'Mixed' 이하)
 FEATURES = ["funny_rate", "med_hours"]
 TARGET = "is_recommended"
 SEED = 42
@@ -108,7 +108,7 @@ def oof_features(recs: pd.DataFrame, n_folds: int = N_FOLDS, seed: int = SEED) -
 
 
 def build_dataset(games: pd.DataFrame, recs: pd.DataFrame) -> pd.DataFrame:
-    """똥겜 리뷰 + OOF 특성 + 종속변수."""
+    """저퀄리티 게임 리뷰 + OOF 특성 + 종속변수."""
     bad_ids = set(games.loc[games["positive_ratio"] < BAD_THRESHOLD, "app_id"])
     df = pd.concat([recs, oof_features(recs)], axis=1)
     df = df[df["app_id"].isin(bad_ids)].dropna(subset=FEATURES)
