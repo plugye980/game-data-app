@@ -26,6 +26,30 @@ def get_model():
 data, dataset, result, rec = get_model()
 games = rec.games
 
+SEARCH_LIMIT = 50
+
+
+def _normalize(s: pd.Series) -> pd.Series:
+    return s.str.replace(r"[™®©]", "", regex=True).str.lower()
+
+
+@st.cache_resource
+def get_search_index() -> tuple[dict, pd.Series]:
+    """인기순(샘플 리뷰 수 → 전체 리뷰 수) 정렬된 표시 이름과 검색용 소문자 제목."""
+    order = games.sort_values(["n_reviews", "user_reviews"], ascending=False)
+    labels = {
+        r.app_id: f"{r.title} ({str(r.date_release)[:4]})" for r in order.itertuples()
+    }
+    keys = pd.Series(_normalize(order["title"].astype(str)).to_numpy(), index=order["app_id"])
+    return labels, keys
+
+
+def search_games(query: str, keys: pd.Series) -> list:
+    q = _normalize(pd.Series([query.strip()])).iloc[0]
+    if not q:
+        return keys.index[:SEARCH_LIMIT].tolist()
+    return keys.index[keys.str.contains(q, regex=False)][:SEARCH_LIMIT].tolist()
+
 # ------------------------------------------------------------------ 사이드바
 with st.sidebar:
     st.header("설정")
@@ -60,15 +84,18 @@ tab_rec, tab_eval, tab_data = st.tabs(["똥겜 추천", "모델 성능", "데이
 
 # ------------------------------------------------------------------ 추천
 with tab_rec:
-    order = games.sort_values(["n_reviews", "user_reviews"], ascending=False)
-    labels = {
-        r.app_id: f"{r.title} ({str(r.date_release)[:4]})" for r in order.itertuples()
-    }
+    # 5만 개 옵션을 멀티셀렉트에 통째로 넘기면 브라우저 쪽 검색이 느려지므로,
+    # 검색은 서버에서 하고 일치하는 상위 결과만 옵션으로 넘긴다.
+    labels, search_keys = get_search_index()
+    query = st.text_input("게임 이름 검색", placeholder="예: portal, dark souls")
+    picked_before = st.session_state.get("picked", [])
+    matches = search_games(query, search_keys)
     picked = st.multiselect(
         "좋아하는 게임을 골라 주세요 (여러 개 가능)",
-        options=list(labels),
+        options=list(dict.fromkeys([*picked_before, *matches])),
         format_func=labels.get,
-        placeholder="게임 이름 검색...",
+        placeholder="위에서 검색한 뒤 선택",
+        key="picked",
     )
 
     if not picked:
