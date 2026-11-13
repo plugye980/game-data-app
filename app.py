@@ -11,7 +11,7 @@ from recommender import (
     train_and_evaluate,
 )
 
-st.set_page_config(page_title="똥겜 추천기", page_icon="🎮", layout="wide")
+st.set_page_config(page_title="특이한 게임 추천", layout="wide")
 
 
 @st.cache_resource(show_spinner="데이터를 불러오고 모델을 학습하는 중...")
@@ -53,7 +53,7 @@ with st.sidebar:
 
 params = Params(w_sim=w_sim, alpha=alpha, max_positive_ratio=max_pr, min_reviews=min_rev)
 
-st.title("🎮 똥겜 추천기")
+st.title("특이한 게임 추천")
 st.caption("좋아하는 게임을 고르면, 평가는 낮지만 취향에 맞을 만한 게임을 찾아 줍니다.")
 
 tab_rec, tab_eval, tab_data = st.tabs(["똥겜 추천", "모델 성능", "데이터·변수"])
